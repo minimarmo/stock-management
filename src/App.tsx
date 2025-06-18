@@ -11,14 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import {
-  HashRouter,
-  Link,
-  Route,
-  BrowserRouter as Router,
-  Routes,
-  useLocation,
-} from "react-router-dom";
+import { HashRouter, Link, Route, Routes, useLocation } from "react-router-dom";
 
 import AddStock from "./pages/AddStock";
 import SellStock from "./pages/SellStock";
@@ -115,13 +108,15 @@ function AppContent() {
 function App() {
   return (
     <HashRouter>
-      <Router>
-        <HeaderBar />
-        <AppContent />
-        <NavigationBar />
-      </Router>
+      <HeaderBar />
+      <AppContent />
+      <NavigationBar />
     </HashRouter>
   );
 }
+
+// ใช้ HashRouter แทน BrowserRouter
+// เพราะ GitHub Pages ไม่รองรับ route แบบ history API
+// HashRouter ใช้ #/path ซึ่งทำให้ routing ทำงานฝั่ง client ได้ถูกต้อง
 
 export default App;
