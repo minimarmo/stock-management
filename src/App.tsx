@@ -45,7 +45,7 @@ function NavigationBar() {
     >
       <BottomNavigation
         value={value}
-        onChange={(e, newValue) => setValue(newValue)}
+        onChange={(_, newValue) => setValue(newValue)}
       >
         <BottomNavigationAction
           label="Stock"
