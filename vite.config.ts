@@ -19,12 +19,12 @@ export default defineConfig({
         theme_color: "#7649DF", // สี app bar
         icons: [
           {
-            src: "/stock.png",
+            src: "stock.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/stock.png",
+            src: "stock.png",
             sizes: "512x512",
             type: "image/png",
           },
