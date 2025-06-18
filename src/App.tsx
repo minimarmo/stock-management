@@ -1,4 +1,4 @@
-import AddIcon from "@mui/icons-material/Add";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import SellIcon from "@mui/icons-material/PointOfSale";
 import StoreIcon from "@mui/icons-material/Store";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import {
+  HashRouter,
   Link,
   Route,
   BrowserRouter as Router,
@@ -47,21 +48,21 @@ function NavigationBar() {
         onChange={(e, newValue) => setValue(newValue)}
       >
         <BottomNavigationAction
-          label="สต๊อก"
+          label="Stock"
           value="/"
           icon={<StoreIcon />}
           component={Link}
           to="/"
         />
         <BottomNavigationAction
-          label="เพิ่ม"
+          label="Add Product"
           value="/add-stock"
-          icon={<AddIcon />}
+          icon={<AddCircleIcon />}
           component={Link}
           to="/add-stock"
         />
         <BottomNavigationAction
-          label="ขาย"
+          label="Selling"
           value="/sell-stock"
           icon={<SellIcon />}
           component={Link}
@@ -78,11 +79,11 @@ function HeaderBar() {
   const getTitle = () => {
     switch (location.pathname) {
       case "/":
-        return "สต๊อกสินค้า";
+        return "Stock";
       case "/add-stock":
-        return "เพิ่มสินค้า";
+        return "Add Product";
       case "/sell-stock":
-        return "ขายสินค้า";
+        return "Selling";
       default:
         return "ระบบจัดการสต๊อก";
     }
@@ -113,11 +114,13 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <HeaderBar />
-      <AppContent />
-      <NavigationBar />
-    </Router>
+    <HashRouter>
+      <Router>
+        <HeaderBar />
+        <AppContent />
+        <NavigationBar />
+      </Router>
+    </HashRouter>
   );
 }
 

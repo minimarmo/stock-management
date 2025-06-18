@@ -104,7 +104,7 @@ const ProductForm = forwardRef(function ProductForm(
   return (
     <Box
       sx={{
-        height: "100vh",
+        minHeight: "100vh",
         maxWidth: "100%",
         p: 4,
       }}
@@ -140,7 +140,7 @@ const ProductForm = forwardRef(function ProductForm(
           render={({ field }) => (
             <TextField
               {...field}
-              label="ชื่อสินค้า"
+              label="Product Name"
               fullWidth
               margin="normal"
             />
@@ -153,7 +153,7 @@ const ProductForm = forwardRef(function ProductForm(
           render={({ field }) => (
             <TextField
               {...field}
-              label="ราคาต่อชิ้น"
+              label="bath/price"
               type="number"
               fullWidth
               margin="normal"
@@ -163,14 +163,14 @@ const ProductForm = forwardRef(function ProductForm(
         />
 
         <Button type="submit" fullWidth variant="contained" disabled={loading}>
-          {loading ? "กำลังบันทึก..." : "บันทึกสินค้า"}
+          {loading ? "Saving..." : "Save"}
         </Button>
       </form>
 
       <Dialog open={scannerOpen} onClose={() => setScannerOpen(false)}>
         <Box sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
-            สแกน QR / Barcode
+            Scan: QR / Barcode
           </Typography>
           {scannerOpen && (
             <BarcodeScanner

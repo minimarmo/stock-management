@@ -65,13 +65,13 @@ export default function SellStock() {
   };
 
   return (
-    <Box sx={{ height: "100vh", maxWidth: "100%", px: 2, pt: 1 }}>
+    <Box sx={{ minHeight: "100vh", maxWidth: "100%", px: 2, pt: 1 }}>
       <Button
         sx={{ width: "100%" }}
         variant="contained"
         onClick={() => setScannerOpen(true)}
       >
-        สแกนสินค้า
+        Scan Barcode
       </Button>
 
       <Dialog open={scannerOpen} onClose={() => setScannerOpen(false)}>
