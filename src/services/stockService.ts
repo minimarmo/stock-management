@@ -2,9 +2,30 @@ import dayjs from "dayjs";
 import type { Product } from "../types/product";
 import { supabase } from "./supabaseClient";
 
+// Pull product list to show in report
+export async function getAllProducts() {
+  const { data, error } = await supabase.from("products").select("*");
+  if (error) throw error;
+  return data;
+}
+
 // Add new product
 export async function addProduct(product: Product) {
   const { data, error } = await supabase.from("products").insert([product]);
+  if (error) throw error;
+  return data;
+}
+
+// Update product
+export async function updateProduct(
+  qr_code: string,
+  updates: Partial<Product>
+) {
+  const { data, error } = await supabase
+    .from("products")
+    .update(updates)
+    .eq("qr_code", qr_code);
+
   if (error) throw error;
   return data;
 }
@@ -15,7 +36,6 @@ export async function getProductByBarCode(qrCode: string) {
     .from("products")
     .select("*")
     .eq("qr_code", qrCode)
-    .eq("action", "IN")
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
@@ -24,22 +44,55 @@ export async function getProductByBarCode(qrCode: string) {
   return data;
 }
 
-// Pull product list to show in report
-export async function getAllProducts() {
-  const { data, error } = await supabase.from("products").select("*");
-  if (error) throw error;
-  return data;
+export async function logActivity(
+  action: string,
+  qr_code: string,
+  payload: unknown
+) {
+  const { error } = await supabase.from("logs").insert([
+    {
+      action,
+      product_qr: qr_code,
+      payload,
+      created_at: new Date().toISOString(),
+    },
+  ]);
+  if (error) console.warn("Log error", error);
 }
 
 // Update action and updated_date when selling
-export async function markProductAsSold(qrCode: string) {
-  const { error } = await supabase
+export async function setProductAsSold(qrCode: string, units: number) {
+  const { data, error: fetchError } = await supabase
     .from("products")
-    .update({
-      action: "OUT",
-      updated_date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-    })
+    .select("quantity")
     .eq("qr_code", qrCode)
-    .eq("action", "IN"); // ✅ ป้องกันซ้ำ
-  if (error) throw error;
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  const currentQty = data?.quantity ?? 0;
+  const newQty = currentQty - units;
+
+  if (newQty < 0) {
+    throw new Error("สินค้าในสต๊อกไม่พอขาย");
+  }
+
+  if (newQty === 0) {
+    // ลบ record ถ้าเหลือ 0
+    const { error: deleteError } = await supabase
+      .from("products")
+      .delete()
+      .eq("qr_code", qrCode);
+    if (deleteError) throw deleteError;
+  } else {
+    // อัปเดตจำนวนใหม่
+    const { error: updateError } = await supabase
+      .from("products")
+      .update({
+        quantity: newQty,
+        updated_date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      })
+      .eq("qr_code", qrCode);
+    if (updateError) throw updateError;
+  }
 }

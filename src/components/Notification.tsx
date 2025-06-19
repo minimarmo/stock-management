@@ -1,4 +1,5 @@
-import { Alert, Snackbar } from "@mui/material";
+import { useToast } from "@chakra-ui/react";
+import { useEffect } from "react";
 
 export type NotificationType = "success" | "error" | "info" | "warning";
 
@@ -17,16 +18,20 @@ export default function Notification({
   duration = 3000,
   onClose,
 }: NotificationProps) {
-  return (
-    <Snackbar
-      open={open}
-      autoHideDuration={duration}
-      onClose={onClose}
-      anchorOrigin={{ vertical: "top", horizontal: "center" }}
-    >
-      <Alert onClose={onClose} severity={type} variant="filled">
-        {message}
-      </Alert>
-    </Snackbar>
-  );
+  const toast = useToast();
+
+  useEffect(() => {
+    if (open) {
+      toast({
+        title: message,
+        status: type,
+        duration,
+        isClosable: true,
+        position: "top",
+        onCloseComplete: onClose,
+      });
+    }
+  }, [open, message, type, duration, toast, onClose]);
+
+  return null;
 }

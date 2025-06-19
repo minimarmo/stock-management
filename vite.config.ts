@@ -16,15 +16,15 @@ export default defineConfig({
         start_url: "/stock-management/",
         display: "standalone",
         background_color: "#ffffff",
-        theme_color: "#7649DF", // สี app bar
+        theme_color: "#74C4E9", // สี app bar
         icons: [
           {
-            src: "stock.png",
+            src: "icon192.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "stock.png",
+            src: "icon512.png",
             sizes: "512x512",
             type: "image/png",
           },
