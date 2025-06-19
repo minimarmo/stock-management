@@ -23,6 +23,7 @@ export default function Notification({
   useEffect(() => {
     if (open) {
       toast({
+        id: `toast-${Date.now()}`,
         title: message,
         status: type,
         duration,

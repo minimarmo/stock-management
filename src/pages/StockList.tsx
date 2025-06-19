@@ -89,7 +89,7 @@ export default function StockList() {
       <Stack spacing={4}>
         {rows.map((product) => (
           <Flex
-            key={product.qr_code}
+            key={product.code}
             borderWidth="1px"
             borderRadius="lg"
             p={4}
@@ -98,7 +98,7 @@ export default function StockList() {
           >
             <Box>
               <Text fontSize="sm" color="gray.500">
-                Code: {product.qr_code}
+                Code: {product.code}
               </Text>
               <Text fontWeight="bold" fontSize="lg">
                 {product.name}

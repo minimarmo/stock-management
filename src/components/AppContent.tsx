@@ -1,6 +1,7 @@
 import { Box } from "@chakra-ui/react";
 import { Route, Routes } from "react-router-dom";
 import AddStock from "../pages/AddStock";
+import Report from "../pages/Report";
 import SellStock from "../pages/SellStock";
 import StockList from "../pages/StockList";
 
@@ -11,6 +12,7 @@ export default function AppContent() {
         <Route path="/" element={<StockList />} />
         <Route path="/add-stock" element={<AddStock />} />
         <Route path="/sell-stock" element={<SellStock />} />
+        <Route path="/report" element={<Report />} />
       </Routes>
     </Box>
   );

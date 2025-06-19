@@ -1,6 +1,7 @@
 import { Box, Flex, Icon, Text, VStack } from "@chakra-ui/react";
 import { useEffect, useState, type JSX } from "react";
 import { FaCirclePlus } from "react-icons/fa6";
+import { HiDocumentReport } from "react-icons/hi";
 import { MdPointOfSale, MdStore } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 
@@ -14,6 +15,7 @@ const navItems: NavItem[] = [
   { label: "Stock", icon: <MdStore />, to: "/" },
   { label: "Add Product", icon: <FaCirclePlus />, to: "/add-stock" },
   { label: "Selling", icon: <MdPointOfSale />, to: "/sell-stock" },
+  { label: "Report", icon: <HiDocumentReport />, to: "/report" },
 ];
 
 export default function NavigationBar() {

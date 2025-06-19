@@ -35,17 +35,19 @@ import { z } from "zod";
 import {
   addProduct,
   getProductByBarCode,
+  logActivity,
   updateProduct,
 } from "../services/stockService";
 import BarcodeScanner from "./BarcodeScanner";
 
 const schema = z.object({
-  qr_code: z.string().min(1, "QR Code ห้ามว่าง"),
+  code: z.string().min(1, "QR Code ห้ามว่าง"),
   name: z.string().min(1, "ชื่อสินค้าห้ามว่าง"),
   price: z.number().min(0.01, "ราคาต้องมากกว่า 0"),
   quantity: z.number().min(1, "จำนวนต้องมากกว่า 0"),
   created_date: z.date().optional(),
   updated_date: z.date().optional(),
+  notes: z.string().optional(),
 });
 
 export type ProductFormData = z.infer<typeof schema>;
@@ -69,11 +71,11 @@ const ProductForm = forwardRef(function ProductForm(
   { initialValues, setToastInfo, onSubmitSuccess, onCancel }: ProductFormProps,
   ref: ForwardedRef<ProductFormRef>
 ) {
-  const isEditMode = !!initialValues?.qr_code;
+  const isEditMode = !!initialValues?.code;
   const { control, handleSubmit, reset, setValue } = useForm<ProductFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      qr_code: "",
+      code: "",
       name: "",
       price: 0,
       quantity: 1,
@@ -90,7 +92,7 @@ const ProductForm = forwardRef(function ProductForm(
   }, [initialValues, reset]);
 
   useImperativeHandle(ref, () => ({
-    setQR: (qr: string) => setValue("qr_code", qr),
+    setQR: (qr: string) => setValue("code", qr),
   }));
 
   const onSubmit = async (data: ProductFormData) => {
@@ -101,13 +103,45 @@ const ProductForm = forwardRef(function ProductForm(
       if (isEditMode) {
         console.log("Edit Mode");
 
+        const original = initialValues!;
+        const notes: string[] = [];
+
+        if (data.name !== original.name) notes.push("name");
+        if (data.price !== original.price) notes.push("price");
+        if (data.quantity !== original.quantity) notes.push("quantity");
+
         const payload = {
           ...data,
           created_date: dayjs(data.created_date).format("YYYY-MM-DD HH:mm:ss"),
           updated_date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
         };
 
-        await updateProduct(data.qr_code, payload);
+        await updateProduct(data.code, payload);
+        // 📝 Log UPDATE ทุกกรณี
+        await logActivity("UPDATE", {
+          product_code: data.code,
+          product_name: data.name,
+          price: data.price,
+          units: data.quantity,
+          notes: notes.join(", "),
+        });
+
+        // 🔼 ถ้า quantity เปลี่ยน → log IN หรือ OUT
+        const originalQty = original.quantity ?? 0;
+        const newQty = data.quantity;
+
+        if (newQty !== originalQty) {
+          const diff = Math.abs(newQty - originalQty);
+          const qtyAction = newQty > originalQty ? "IN" : "OUT";
+
+          await logActivity(qtyAction, {
+            product_code: data.code,
+            product_name: data.name,
+            price: data.price,
+            units: diff,
+            notes: "quantity",
+          });
+        }
 
         setToastInfo?.({
           open: true,
@@ -118,33 +152,48 @@ const ProductForm = forwardRef(function ProductForm(
         console.log("Create Mode");
 
         try {
-          const existing = await getProductByBarCode(data.qr_code);
-          console.log("existing:", existing);
+          const existing = await getProductByBarCode(data.code);
+          // ถ้ามีสินค้า → อัปเดต
+          const updatedProduct = {
+            ...existing,
+            quantity: existing.quantity + data.quantity,
+            created_date: dayjs(existing.created_date).format(
+              "YYYY-MM-DD HH:mm:ss"
+            ),
+            updated_date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+          };
 
-          if (existing) {
-            // มีสินค้าอยู่แล้ว → อัปเดตจำนวน
-            const updatedProduct = {
-              ...existing,
-              quantity: existing.quantity + data.quantity,
-              created_date: dayjs(existing.created_date).format(
-                "YYYY-MM-DD HH:mm:ss"
-              ),
-              updated_date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-            };
+          await updateProduct(data.code, updatedProduct);
+          await logActivity("IN", {
+            product_code: data.code,
+            product_name: data.name,
+            price: data.price,
+            units: data.quantity,
+          });
 
-            await updateProduct(data.qr_code, updatedProduct);
+          setToastInfo?.({
+            open: true,
+            message: "อัปเดตจำนวนสินค้าแล้ว",
+            type: "info",
+          });
+        } catch (err: any) {
+          // ถ้าไม่พบสินค้าในระบบ (เช่น single() หาไม่เจอ)
+          const isNotFound =
+            err?.response?.status === 404 ||
+            err?.message?.toLowerCase().includes("ไม่พบ");
 
-            setToastInfo?.({
-              open: true,
-              message: "อัปเดตจำนวนสินค้าแล้ว",
-              type: "info",
-            });
-          } else {
-            // ไม่พบ product → เพิ่มใหม่
+          if (isNotFound) {
             await addProduct({
               ...data,
               created_date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
               updated_date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+            });
+
+            await logActivity("IN", {
+              product_code: data.code,
+              product_name: data.name,
+              price: data.price,
+              units: data.quantity,
             });
 
             setToastInfo?.({
@@ -152,19 +201,21 @@ const ProductForm = forwardRef(function ProductForm(
               message: "เพิ่มสินค้าสำเร็จ",
               type: "success",
             });
+          } else {
+            // error อื่น ๆ
+            setToastInfo?.({
+              open: true,
+              message: `เกิดข้อผิดพลาด ${String(err)}`,
+              type: "error",
+            });
+            console.error("getProductByBarCode error:", err);
           }
-        } catch (err) {
-          setToastInfo?.({
-            open: true,
-            message: `เกิดข้อผิดพลาด ${String(err)}`,
-            type: "error",
-          });
         }
       }
 
       onSubmitSuccess?.();
       reset({
-        qr_code: "",
+        code: "",
         name: "",
         price: 0,
         quantity: 1,
@@ -196,7 +247,7 @@ const ProductForm = forwardRef(function ProductForm(
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={4}>
           <Controller
-            name="qr_code"
+            name="code"
             control={control}
             render={({ field }) => (
               <FormControl isRequired>
@@ -315,7 +366,7 @@ const ProductForm = forwardRef(function ProductForm(
           <ModalBody>
             <BarcodeScanner
               onResult={(text) => {
-                setValue("qr_code", text);
+                setValue("code", text);
                 onClose();
               }}
               onError={(err) => console.warn("Scan error:", err)}

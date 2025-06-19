@@ -20,6 +20,7 @@ import BarcodeScanner from "../components/BarcodeScanner";
 import Notification from "../components/Notification";
 import {
   getProductByBarCode,
+  logActivity,
   setProductAsSold,
 } from "../services/stockService";
 import type { Product } from "../types/product";
@@ -42,7 +43,7 @@ export default function SellStock() {
     isProcessingRef.current = true;
 
     try {
-      const existingIndex = products.findIndex((p) => p.qr_code === qrCode);
+      const existingIndex = products.findIndex((p) => p.code === qrCode);
 
       if (existingIndex !== -1) {
         // ถ้าสแกนซ้ำ → เพิ่ม units
@@ -70,7 +71,13 @@ export default function SellStock() {
   const confirmSale = async () => {
     try {
       for (const p of products) {
-        await setProductAsSold(p.qr_code, p.units);
+        await setProductAsSold(p.code, p.units);
+        await logActivity("OUT", {
+          product_code: p.code,
+          product_name: p.name,
+          price: p.price,
+          units: p.units,
+        });
       }
       setToastInfo({
         open: true,

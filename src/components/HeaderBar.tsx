@@ -12,6 +12,8 @@ export default function HeaderBar() {
         return "Add Product";
       case "/sell-stock":
         return "Selling";
+      case "/report":
+        return "Report";
       default:
         return "Stock Management";
     }
