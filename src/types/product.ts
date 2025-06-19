@@ -1,6 +1,6 @@
 export interface Product {
   id?: string;
-  qr_code: string;
+  code: string;
   name: string;
   price: number;
   action?: "IN" | "OUT";
