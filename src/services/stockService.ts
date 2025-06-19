@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import type { Product } from "../types/product";
 import { supabase } from "./supabaseClient";
 
-// Pull product list to show in report
+// Pull product list
 export async function getAllProducts() {
   const { data, error } = await supabase.from("products").select("*");
   if (error) throw error;
@@ -17,25 +17,22 @@ export async function addProduct(product: Product) {
 }
 
 // Update product
-export async function updateProduct(
-  qr_code: string,
-  updates: Partial<Product>
-) {
+export async function updateProduct(code: string, updates: Partial<Product>) {
   const { data, error } = await supabase
     .from("products")
     .update(updates)
-    .eq("qr_code", qr_code);
+    .eq("code", code);
 
   if (error) throw error;
   return data;
 }
 
 // Pull product detail by QR code
-export async function getProductByBarCode(qrCode: string) {
+export async function getProductByBarCode(code: string) {
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .eq("qr_code", qrCode)
+    .eq("code", code)
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
@@ -44,28 +41,12 @@ export async function getProductByBarCode(qrCode: string) {
   return data;
 }
 
-export async function logActivity(
-  action: string,
-  qr_code: string,
-  payload: unknown
-) {
-  const { error } = await supabase.from("logs").insert([
-    {
-      action,
-      product_qr: qr_code,
-      payload,
-      created_at: new Date().toISOString(),
-    },
-  ]);
-  if (error) console.warn("Log error", error);
-}
-
 // Update action and updated_date when selling
-export async function setProductAsSold(qrCode: string, units: number) {
+export async function setProductAsSold(code: string, units: number) {
   const { data, error: fetchError } = await supabase
     .from("products")
     .select("quantity")
-    .eq("qr_code", qrCode)
+    .eq("code", code)
     .single();
 
   if (fetchError) throw fetchError;
@@ -82,7 +63,7 @@ export async function setProductAsSold(qrCode: string, units: number) {
     const { error: deleteError } = await supabase
       .from("products")
       .delete()
-      .eq("qr_code", qrCode);
+      .eq("code", code);
     if (deleteError) throw deleteError;
   } else {
     // อัปเดตจำนวนใหม่
@@ -92,7 +73,48 @@ export async function setProductAsSold(qrCode: string, units: number) {
         quantity: newQty,
         updated_date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       })
-      .eq("qr_code", qrCode);
+      .eq("code", code);
     if (updateError) throw updateError;
   }
+}
+
+/**
+ * บันทึกกิจกรรมที่เกิดกับสินค้า
+ * @param action เช่น 'IN' | 'OUT' | 'UPDATE'
+ * @param product ข้อมูลสินค้า (ควรเป็น partial หรือระบุเฉพาะฟิลด์สำคัญ)
+ */
+export async function logActivity(
+  action: string,
+  product: {
+    product_code: string;
+    product_name: string;
+    price: number;
+    units: number;
+    notes?: string;
+  }
+) {
+  const { error } = await supabase.from("product_logs").insert([
+    {
+      action,
+      product_code: product.product_code,
+      product_name: product.product_name,
+      price: product.price,
+      units: product.units,
+      total: product.price * product.units,
+      created_at: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      notes: product?.notes,
+    },
+  ]);
+
+  if (error) {
+    console.warn("Log activity failed:", error);
+    throw error;
+  }
+}
+
+// Pull product logs
+export async function getAllProductLogs() {
+  const { data, error } = await supabase.from("product_logs").select("*");
+  if (error) throw error;
+  return data;
 }
