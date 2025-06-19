@@ -34,7 +34,8 @@ export default function NavigationBar() {
       bg="white"
       borderTop="1px solid #e2e8f0"
       px={2}
-      py={2}
+      pt={3}
+      pb={4}
       boxShadow="md"
     >
       <Flex justify="space-around">
