@@ -113,8 +113,16 @@ export async function logActivity(
 }
 
 // Pull product logs
-export async function getAllProductLogs() {
-  const { data, error } = await supabase.from("product_logs").select("*");
+export async function getAllProductLogs(month?: string) {
+  const from = dayjs(month).startOf("month").format("YYYY-MM-DD");
+  const to = dayjs(month).endOf("month").format("YYYY-MM-DD");
+
+  const { data, error } = await supabase
+    .from("product_logs")
+    .select("*")
+    .gte("created_at", from)
+    .lte("created_at", to);
+
   if (error) throw error;
   return data;
 }
