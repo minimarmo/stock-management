@@ -1,54 +1,83 @@
-# React + TypeScript + Vite
+# 📦 Stock Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ระบบจัดการสต๊อกสินค้า สำหรับร้านค้าและคลังสินค้า รองรับการสแกน QR/Barcode, การบันทึกยอดขาย, รายงานรายเดือน และสามารถติดตั้งเป็นแอป (PWA-like)
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 ฟีเจอร์หลัก
 
-## Expanding the ESLint configuration
+- ✅ เพิ่ม / แก้ไข / ลบสินค้า
+- ✅ สแกน QR หรือ Barcode เพื่อขายสินค้า
+- ✅ บันทึกประวัติการขายและนำเข้าสินค้า
+- ✅ แสดงรายงานรายเดือน (IN / OUT / Logs)
+- ✅ ค้นหาสินค้าแบบ Real-time
+- ✅ รองรับการติดตั้งเป็นแอปมือถือ (PWA-like)
+- ✅ แจ้งเตือนผู้ใช้เมื่อมีเวอร์ชันใหม่ (PWA Update Prompt)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 🔗 Demo
+
+> 🌐 ลองใช้งานจริงที่: [demo](https://minimarmo.github.io/stock-management/)
+
+---
+
+## 🧱 Tech Stack
+
+- ⚛️ React + TypeScript
+- 💅 Chakra UI
+- 🔎 Supabase (PostgreSQL)
+- 📱 Barcode scanning: [`@zxing/browser`](https://github.com/zxing-js/library)
+- ⚡ Vite + [`vite-plugin-pwa`](https://vite-pwa-org.netlify.app/)
+
+---
+
+## 🛠 วิธีใช้งาน
+
+### 1. ติดตั้ง dependency
+
+```bash
+npm install
+# หรือ
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 2. กำหนด .env สำหรับ Supabase
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
+
+---
+
+### 3. รันโปรเจกต์
+
+```bash
+npm run dev
+```
+
+---
+
+### 4. Build สำหรับ Production
+
+```bash
+npm run build
+```
+
+---
+
+## 📲 การติดตั้งแอป (PWA-like)
+
+- สามารถติดตั้งแอปลงบนมือถือ/เดสก์ท็อปผ่าน “Add to Home Screen”
+- ทำงานในโหมดแอป (standalone UI) เหมือนแอปมือถือ
+- **ไม่ได้รองรับการทำงานแบบออฟไลน์**
+- หากมีอัปเดตเวอร์ชันใหม่ ระบบจะแจ้งให้ผู้ใช้รีโหลดเพื่อใช้งานเวอร์ชันล่าสุด
+
+---
+
+## 🖼 ตัวอย่างหน้าจอ
+
+![Preview](https://minimarmo.github.io/stock-management/images/preview.gif)
