@@ -2,8 +2,10 @@ import { HashRouter } from "react-router-dom";
 import AppContent from "./components/AppContent";
 import HeaderBar from "./components/HeaderBar";
 import NavigationBar from "./components/NavigationBar";
+import usePwaUpdateNotification from "./hooks/usePwaUpdateNotification";
 
 function App() {
+  usePwaUpdateNotification();
   return (
     <HashRouter>
       <HeaderBar />
