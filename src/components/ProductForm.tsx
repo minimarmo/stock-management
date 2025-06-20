@@ -8,6 +8,7 @@ import {
   Input,
   Modal,
   ModalBody,
+  ModalCloseButton,
   ModalContent,
   ModalHeader,
   ModalOverlay,
@@ -29,8 +30,8 @@ import {
   useState,
   type ForwardedRef,
 } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { AiOutlineQrcode } from "react-icons/ai";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { MdQrCodeScanner } from "react-icons/md";
 import { z } from "zod";
 import {
   addProduct,
@@ -82,8 +83,39 @@ const ProductForm = forwardRef(function ProductForm(
     },
   });
 
+  const watchedCode = useWatch({
+    control,
+    name: "code",
+  });
+
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fillInfoIfExists = async () => {
+      if (!watchedCode || isEditMode) return;
+
+      try {
+        const existing = await getProductByBarCode(watchedCode);
+
+        // ถ้ามีข้อมูล ให้เติมชื่อและราคาทันที
+        setValue("name", existing.name);
+        setValue("price", existing.price);
+      } catch (err: any) {
+        // ไม่ต้องทำอะไรถ้าไม่เจอ
+        if (
+          err?.response?.status === 404 ||
+          err?.message?.toLowerCase().includes("ไม่พบ")
+        ) {
+          // clear name/price กรณีพิมพ์ผิด
+          setValue("name", "");
+          setValue("price", 0);
+        }
+      }
+    };
+
+    fillInfoIfExists();
+  }, [watchedCode, isEditMode, setValue]);
 
   useEffect(() => {
     if (initialValues) {
@@ -117,7 +149,7 @@ const ProductForm = forwardRef(function ProductForm(
         };
 
         await updateProduct(data.code, payload);
-        // 📝 Log UPDATE ทุกกรณี
+        // Log UPDATE ทุกกรณี
         await logActivity("UPDATE", {
           product_code: data.code,
           product_name: data.name,
@@ -126,7 +158,7 @@ const ProductForm = forwardRef(function ProductForm(
           notes: notes.join(", "),
         });
 
-        // 🔼 ถ้า quantity เปลี่ยน → log IN หรือ OUT
+        // ถ้า quantity เปลี่ยน → log IN หรือ OUT
         const originalQty = original.quantity ?? 0;
         const newQty = data.quantity;
 
@@ -153,7 +185,7 @@ const ProductForm = forwardRef(function ProductForm(
 
         try {
           const existing = await getProductByBarCode(data.code);
-          // ถ้ามีสินค้า → อัปเดต
+          // กรณีมีสินค้าในระบบอยู่แล้ว → อัปเดต
           const updatedProduct = {
             ...existing,
             quantity: existing.quantity + data.quantity,
@@ -177,7 +209,7 @@ const ProductForm = forwardRef(function ProductForm(
             type: "info",
           });
         } catch (err: any) {
-          // ถ้าไม่พบสินค้าในระบบ (เช่น single() หาไม่เจอ)
+          // กรณีไม่พบไม่พบสินค้าในระบบให้เพิ่มสินค้าใหม่
           const isNotFound =
             err?.response?.status === 404 ||
             err?.message?.toLowerCase().includes("ไม่พบ");
@@ -202,7 +234,6 @@ const ProductForm = forwardRef(function ProductForm(
               type: "success",
             });
           } else {
-            // error อื่น ๆ
             setToastInfo?.({
               open: true,
               message: `เกิดข้อผิดพลาด ${String(err)}`,
@@ -244,6 +275,7 @@ const ProductForm = forwardRef(function ProductForm(
 
   return (
     <Box minH="500px" w="calc(100vw - 32px)">
+      {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={4}>
           <Controller
@@ -261,7 +293,7 @@ const ProductForm = forwardRef(function ProductForm(
                 {!isEditMode && (
                   <IconButton
                     aria-label="scan"
-                    icon={<AiOutlineQrcode />}
+                    icon={<MdQrCodeScanner />}
                     onClick={onOpen}
                     position="absolute"
                     right="10px"
@@ -363,6 +395,7 @@ const ProductForm = forwardRef(function ProductForm(
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>สแกน QR / Barcode</ModalHeader>
+          <ModalCloseButton />
           <ModalBody>
             <BarcodeScanner
               onResult={(text) => {
